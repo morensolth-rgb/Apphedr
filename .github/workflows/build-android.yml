@@ -29,6 +29,36 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build APK
-        run: eas build --platform android --profile preview --non-interactive
+        id: eas_build
+        run: |
+          BUILD_URL=$(eas build --platform android --profile preview --non-interactive --json 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0].get('artifacts',{}).get('applicationArchiveUrl',''))" 2>/dev/null || echo "")
+          echo "apk_url=$BUILD_URL" >> $GITHUB_OUTPUT
+          eas build --platform android --profile preview --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download APK from EAS
+        run: |
+          # Wait a moment then fetch latest build URL via EAS API
+          sleep 5
+          APK_URL=$(curl -s -X POST "https://api.expo.dev/graphql" \
+            -H "Authorization: Bearer ${{ secrets.EXPO_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"query": "{ app { byId(appId: \"3441e41e-75d1-4e6d-ad2f-a8478df1b1ac\") { buildsPaginated(first: 1) { edges { node { __typename ... on Build { status artifacts { applicationArchiveUrl } } } } } } } }"}' \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); edges=d['data']['app']['byId']['buildsPaginated']['edges']; print(edges[0]['node']['artifacts']['applicationArchiveUrl'] or '') if edges else print('')")
+          echo "APK URL: $APK_URL"
+          if [ -n "$APK_URL" ] && [ "$APK_URL" != "None" ] && [ "$APK_URL" != "null" ]; then
+            curl -L "$APK_URL" -o virtualdroid.apk
+            ls -lh virtualdroid.apk
+          else
+            echo "APK URL not available yet (build may still be queued on EAS)"
+          fi
+
+      - name: Upload APK as GitHub Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: VirtualDroid-APK
+          path: "*.apk"
+          if-no-files-found: warn
+          retention-days: 30
