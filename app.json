@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "VirtualDroid",
+    "slug": "virtualdroid",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d0d0d"
+    },
+    "android": {
+      "package": "com.virtualdroid.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d0d0d"
+      },
+      "permissions": [
+        "android.permission.REQUEST_INSTALL_PACKAGES",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.READ_PHONE_STATE",
+        "android.permission.CHANGE_NETWORK_STATE",
+        "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.CHANGE_WIFI_STATE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-splash-screen"
+    ],
+    "scheme": "virtualdroid",
+    "extra": {
+      "eas": {
+        "projectId": "virtualdroid-app"
+      }
+    }
+  }
+}
