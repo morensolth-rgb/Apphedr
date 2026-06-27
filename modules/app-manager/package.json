@@ -1,0 +1,9 @@
+{
+  "name": "app-manager",
+  "version": "1.0.0",
+  "description": "Native module to get installed apps and launch them",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

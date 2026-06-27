@@ -11,6 +11,7 @@ import {
   getInstances, VirtualInstance, InstalledApp, removeAppFromInstance,
 } from '../lib/storage';
 import { VirtualCore } from '../lib/virtualcore';
+import { AppManager } from '../modules/app-manager/src/index';
 
 export default function InstanceScreen() {
   const router = useRouter();
@@ -31,9 +32,23 @@ export default function InstanceScreen() {
   const handleLaunch = async (app: InstalledApp) => {
     if (!instance) return;
     setLaunchingApp(app.id);
-    const ok = await VirtualCore.launchApp(instance.id, app.packageName);
+
+    // Try virtual launch first
+    const virtualOk = await VirtualCore.launchApp(instance.id, app.packageName);
+
+    if (!virtualOk) {
+      // Fallback: launch real app on device if it exists
+      const realOk = await AppManager.launchApp(app.packageName);
+      if (!realOk) {
+        Alert.alert(
+          'تعذر التشغيل',
+          `"${app.name}" غير مثبت على الجهاز الحقيقي.\nيمكنك تشغيله فقط من داخل البيئة الوهمية عند اكتمال النواة.`,
+          [{ text: 'حسناً' }]
+        );
+      }
+    }
+
     setLaunchingApp(null);
-    if (!ok) Alert.alert('خطأ', 'فشل تشغيل التطبيق داخل البيئة الوهمية');
   };
 
   const handleUninstall = (app: InstalledApp) => {
@@ -127,13 +142,24 @@ export default function InstanceScreen() {
         }
       />
 
-      {/* Install FAB */}
-      <TouchableOpacity
-        style={s.fab}
-        onPress={() => router.push({ pathname: '/install', params: { id: instance.id } })}
-      >
-        <Ionicons name="add" size={30} color="#000" />
-      </TouchableOpacity>
+      {/* Action Buttons */}
+      <View style={s.fabRow}>
+        {/* Import from device */}
+        <TouchableOpacity
+          style={s.fabSecondary}
+          onPress={() => router.push({ pathname: '/import-apps', params: { id: instance.id } })}
+        >
+          <Ionicons name="phone-portrait-outline" size={22} color={C.primary} />
+        </TouchableOpacity>
+
+        {/* Install APK */}
+        <TouchableOpacity
+          style={s.fab}
+          onPress={() => router.push({ pathname: '/install', params: { id: instance.id } })}
+        >
+          <Ionicons name="add" size={30} color="#000" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -189,8 +215,17 @@ const s = StyleSheet.create({
   emptyBox: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 100, gap: 12 },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: C.textSec },
   emptyText: { fontSize: 14, color: C.textDim },
-  fab: {
+  fabRow: {
     position: 'absolute', bottom: 32, right: 24,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+  },
+  fabSecondary: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: C.surface, borderWidth: 2, borderColor: C.primary,
+    justifyContent: 'center', alignItems: 'center',
+    elevation: 6, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 8,
+  },
+  fab: {
     width: 60, height: 60, borderRadius: 30,
     backgroundColor: C.primary, justifyContent: 'center', alignItems: 'center',
     elevation: 8, shadowColor: C.primary, shadowOpacity: 0.4, shadowRadius: 12,
