@@ -35,9 +35,11 @@
     ],
     "scheme": "virtualdroid",
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "virtualdroid-app"
+        "projectId": "3441e41e-75d1-4e6d-ad2f-a8478df1b1ac"
       }
-    }
+    },
+    "owner": "hedrs-team"
   }
 }
